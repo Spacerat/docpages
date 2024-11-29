@@ -53,7 +53,7 @@ function getConfigPaths() {
 
 async function generate(
   path: string,
-  { defaultName = "readme.md" }: { defaultName?: string } = {}
+  { defaultName = "README.md" }: { defaultName?: string } = {}
 ) {
   // read the local gitignore file
 

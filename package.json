@@ -1,22 +1,20 @@
 {
-  "name": "typescript-npm-cli-template",
-  "version": "0.0.0-development",
-  "description": "A template for creating npm CLI tools using TypeScript and VSCode",
+  "name": "docpages",
+  "version": "0.0.1",
+  "description": "A simple tool for writing docs directly in code",
   "files": [
     "!lib/__tests__/**/*",
     "lib/**/*",
     "bin/**/*"
   ],
   "bin": {
-    "my-command": "./bin/index.js"
+    "docpages": "./bin/index.js"
   },
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf ./lib/",
-    "cm": "cz",
     "lint": "eslint ./src/ --fix",
     "start": "TS_NODE_FILES=true ts-node ./src/cli.ts",
-    "prepare": "husky install",
     "semantic-release": "semantic-release",
     "test:watch": "jest --watch",
     "test": "jest",
@@ -24,63 +22,54 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ryansonshine/typescript-npm-cli-template.git"
+    "url": "git+https://github.com/spacerat/docpages.git"
   },
   "license": "MIT",
   "author": {
-    "name": "Ryan Sonshine",
-    "email": "ryansonshine@users.noreply.github.com",
-    "url": "https://github.com/ryansonshine"
+    "name": "Joseph Atkins-Turkish",
+    "email": "spacerat@users.noreply.github.com",
+    "url": "https://github.com/spacerat"
   },
   "engines": {
     "node": ">=12.0"
   },
   "keywords": [
-    "boilerplate",
     "cli",
-    "template",
     "typescript",
-    "vscode",
-    "jest",
-    "husky",
-    "commitizen",
-    "semantic-release",
-    "codecov"
+    "documentation",
+    "mustache"
   ],
   "bugs": {
-    "url": "https://github.com/ryansonshine/typescript-npm-cli-template/issues"
+    "url": "https://github.com/spacerat/docpages/issues"
   },
-  "homepage": "https://github.com/ryansonshine/typescript-npm-cli-template#readme",
+  "homepage": "https://github.com/spacerat/docpages#readme",
   "dependencies": {
-    "commander": "^7.2.0"
+    "commander": "^12.1.0",
+    "glob-gitignore": "^1.0.15",
+    "mustache": "^4.2.0"
   },
   "devDependencies": {
-    "@ryansonshine/commitizen": "^4.2.8",
-    "@ryansonshine/cz-conventional-changelog": "^3.3.4",
-    "@types/jest": "^27.5.2",
-    "@types/node": "^12.20.11",
-    "@typescript-eslint/eslint-plugin": "^4.22.0",
-    "@typescript-eslint/parser": "^4.22.0",
-    "chalk": "^4.1.1",
-    "conventional-changelog-conventionalcommits": "^5.0.0",
-    "eslint": "^7.25.0",
-    "eslint-config-prettier": "^8.3.0",
+    "@eslint/js": "^9.15.0",
+    "@tsconfig/node18": "^18.2.4",
+    "@types/jest": "^29.5.14",
+    "@types/mustache": "^4.2.5",
+    "@types/node": "^22.10.1",
+    "@typescript-eslint/eslint-plugin": "^8.16.0",
+    "@typescript-eslint/parser": "^8.16.0",
+    "chalk": "^5.3.0",
+    "eslint": "^9.15.0",
+    "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^3.4.0",
-    "execa": "^5.1.1",
-    "husky": "^6.0.0",
-    "jest": "^27.2.0",
-    "lint-staged": "^13.2.1",
-    "prettier": "^2.2.1",
-    "semantic-release": "^21.0.1",
-    "ts-jest": "^27.0.5",
-    "ts-node": "^10.2.1",
-    "typescript": "^4.2.4"
-  },
-  "config": {
-    "commitizen": {
-      "path": "./node_modules/@ryansonshine/cz-conventional-changelog"
-    }
+    "eslint-plugin-prettier": "^5.2.1",
+    "execa": "^9.5.1",
+    "jest": "^29.7.0",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.4.1",
+    "semantic-release": "^24.2.0",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.16.0"
   },
   "lint-staged": {
     "*.ts": "eslint --cache --cache-location .eslintcache --fix"

@@ -1,15 +1,14 @@
 {
   "name": "docpages",
-  "version": "0.0.1",
+  "version": "1.3.0",
   "description": "A simple tool for writing docs directly in code",
   "files": [
     "!lib/__tests__/**/*",
     "lib/**/*",
     "bin/**/*"
   ],
-  "bin": {
-    "docpages": "./bin/index.js"
-  },
+  "main":  "./lib/cli.js",
+  "bin":  "./lib/cli.js",
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf ./lib/",
@@ -44,7 +43,6 @@
   "homepage": "https://github.com/spacerat/docpages#readme",
   "dependencies": {
     "commander": "^12.1.0",
-    "execa": "^9.5.1",
     "glob-gitignore": "^1.0.15",
     "mustache": "^4.2.0"
   },

@@ -1,9 +1,13 @@
+#!/usr/bin/env node
+
 import { Command } from "commander";
 import { glob } from "glob-gitignore";
 import { promises as fs } from "fs";
 import paths from "path";
 
 import Mustache from "mustache";
+
+import { groupBy, readIfExists, writeIfNotExists } from "./utils";
 
 Mustache.escape = (text) => text;
 
@@ -18,17 +22,17 @@ It implements a full CLI inteface using Commander and Mustache templates.
 const packageJson = require("../package.json");
 const version: string = packageJson.version;
 
-const program = new Command();
-
 const defaultDirTemplate = `
+{{! This template is applied to each output file }}
 {{#files}}
-  {{file}}
+{{file}}
 {{/files}}
-`;
+`.trim();
 
 const defaultFileTemplate = `
+{{! This template is applied to each input file }}
 {{> content}}
-`;
+`.trim();
 
 async function findFiles(path: string) {
   const gitignore = await fs.readFile(".gitignore", "utf8");
@@ -41,22 +45,16 @@ async function findFiles(path: string) {
 function getConfigPaths() {
   const docpagesDir = paths.join(process.cwd(), ".docpages");
 
-  const dirTemplatePath = paths.join(docpagesDir, "directory.mustache");
-  const fileTemplatePath = paths.join(docpagesDir, "file.mustache");
+  const dirTemplatePath = paths.join(docpagesDir, "doc.mustache");
+  const fileTemplatePath = paths.join(docpagesDir, "source.mustache");
 
   return { dirTemplatePath, fileTemplatePath, docpagesDir };
 }
 
-async function readIfExists(path: string, defaultValue: string) {
-  try {
-    await fs.access(path);
-    return await fs.readFile(path, "utf8");
-  } catch {
-    return defaultValue;
-  }
-}
-
-async function generate(path: string) {
+async function generate(
+  path: string,
+  { defaultName = "readme.md" }: { defaultName?: string } = {}
+) {
   // read the local gitignore file
 
   const allFiles = await findFiles(path);
@@ -87,16 +85,27 @@ async function generate(path: string) {
               /(?:^([/*# ])*@doc start((?:[^\S\r\n]+)(?<filename>[\w/.]+))?)(?<template>[\s\S]*?)(?:^([/*# ])*@doc end)/gm
             );
 
-            return Array.from(results).map((result) => {
-              const { filename, template } = result.groups!;
-              const docpath = paths.join(dir, filename || "readme.md");
+            return (
+              Array.from(results)
+                .map((result) => result.groups)
+                .filter((groups) => groups != null)
+                .map((groups) => {
+                  const { filename, template } = groups;
+                  const docpath = paths.join(dir, filename || defaultName);
 
-              return {
-                filename: file,
-                template: template.trim(),
-                docpath,
-              };
-            });
+                  return {
+                    filepath: file,
+                    template: template.trim(),
+                    docpath,
+                  };
+                })
+                // Prevent a file from writing to itself
+                .filter(
+                  (result) =>
+                    result.filepath.toLocaleLowerCase() !==
+                    result.docpath.toLocaleLowerCase()
+                )
+            );
           })
         )
       ).flat();
@@ -116,8 +125,8 @@ async function generate(path: string) {
 
           const files = templates.map((template) => {
             const fileVars = {
-              path: template.filename,
-              name: paths.basename(template.filename),
+              path: template.filepath,
+              name: paths.basename(template.filepath),
             };
 
             const fileRendered = Mustache.render(
@@ -143,54 +152,55 @@ async function generate(path: string) {
   );
 }
 
-program.version(version);
-
-program
-  .command("generate")
-  .argument(
-    "[path]",
-    "Recurse this path to find files to extract documentation from. Defaults to the current path",
-    "."
-  )
-  .action((path) => {
-    generate(path).catch((e) => {
-      console.error(e);
-      process.exit(1);
-    });
-  });
-
-program.command("init").action(async () => {
+async function init() {
   const { dirTemplatePath, fileTemplatePath, docpagesDir } = getConfigPaths();
 
   // Ensure the .docpages directory exists
   await fs.mkdir(docpagesDir, { recursive: true });
 
-  // Write defaultDirTemplate to .docpages/directory.mustache if it doesn't exist
-  try {
-    await fs.access(dirTemplatePath);
-  } catch {
-    await fs.writeFile(dirTemplatePath, defaultDirTemplate);
-  }
+  await writeIfNotExists(dirTemplatePath, defaultDirTemplate);
+  await writeIfNotExists(fileTemplatePath, defaultFileTemplate);
+}
 
-  // Write defaultFileTemplate to .docpages/file.mustache if it doesn't exist
-  try {
-    await fs.access(fileTemplatePath);
-  } catch {
-    await fs.writeFile(fileTemplatePath, defaultFileTemplate);
-  }
+const program = new Command();
 
-  console.log("Initialized .docpages templates");
-});
+program.version(version);
+
+program
+  .name("docpages")
+  .description(
+    `Recurse through all text files (except anything specified by your top-level .gitignore) and extract documentation snippets.
+    
+Text between '@doc start' and '@doc end' is extracted and written to an adjacent file - readme.md by default.
+
+The text is processed with the Moustache template engine. The available variables are:
+
+- {{doc_path}}: the path to the generated file
+- {{doc_name}}: the name of the generated file
+- {{dir_path}}: the path to the directory containing the file
+- {{dir_name}}: the name of the directory containing the file
+- {{name}}: the name of the file being processed
+- {{path}}: the path to the file being processed
+`
+  )
+  .argument("[path]", "the top directory to scan.", ".")
+  .option("--init", "generate a .docpages directory with default templates")
+  .option(
+    "-o, --output <filename>",
+    "set the default output file name in each directory"
+  )
+  .action((path, options) => {
+    if (options.init) {
+      init().catch((e) => {
+        console.error(e);
+        process.exit(1);
+      });
+    } else {
+      generate(path, { defaultName: options.output }).catch((e) => {
+        console.error(e);
+        process.exit(1);
+      });
+    }
+  });
 
 program.parse();
-
-const groupBy = <T, K extends string>(list: T[], getKey: (item: T) => K) =>
-  list.reduce(
-    (previous, currentItem) => {
-      const group = getKey(currentItem);
-      if (!previous[group]) previous[group] = [];
-      previous[group].push(currentItem);
-      return previous;
-    },
-    {} as Record<K, T[]>
-  );

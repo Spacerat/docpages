@@ -29,13 +29,15 @@ function main() {
 }
 ```
 
-And extracts it out alongside like this
+And extracts it out alongside like this:
 
 ```md
 # Welcome to my project
 
 You're viewing readme.md
 ```
+
+If the current working directory includes a .gitignore file, those files are ignored by docpages.
 
 ## Install
 

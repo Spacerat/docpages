@@ -1,11 +1,11 @@
-import { Command } from 'commander';
-import { glob } from 'glob-gitignore';
-import { promises as fs } from 'fs';
-import paths from 'path';
+import { Command } from "commander";
+import { glob } from "glob-gitignore";
+import { promises as fs } from "fs";
+import paths from "path";
 
-import Mustache from 'mustache';
+import Mustache from "mustache";
 
-Mustache.escape = text => text;
+Mustache.escape = (text) => text;
 
 /* @doc start
 
@@ -15,7 +15,7 @@ It implements a full CLI inteface using Commander and Mustache templates.
 
 @doc end */
 
-const packageJson = require('../package.json');
+const packageJson = require("../package.json");
 const version: string = packageJson.version;
 
 const program = new Command();
@@ -31,18 +31,18 @@ const defaultFileTemplate = `
 `;
 
 async function findFiles(path: string) {
-  const gitignore = await fs.readFile('.gitignore', 'utf8');
+  const gitignore = await fs.readFile(".gitignore", "utf8");
 
-  const rules = gitignore.split('\n');
+  const rules = gitignore.split("\n");
 
-  return await glob(paths.join(path, '**'), { ignore: rules });
+  return await glob(paths.join(path, "**"), { ignore: rules });
 }
 
 function getConfigPaths() {
-  const docpagesDir = paths.join(process.cwd(), '.docpages');
+  const docpagesDir = paths.join(process.cwd(), ".docpages");
 
-  const dirTemplatePath = paths.join(docpagesDir, 'directory.mustache');
-  const fileTemplatePath = paths.join(docpagesDir, 'file.mustache');
+  const dirTemplatePath = paths.join(docpagesDir, "directory.mustache");
+  const fileTemplatePath = paths.join(docpagesDir, "file.mustache");
 
   return { dirTemplatePath, fileTemplatePath, docpagesDir };
 }
@@ -50,7 +50,7 @@ function getConfigPaths() {
 async function readIfExists(path: string, defaultValue: string) {
   try {
     await fs.access(path);
-    return await fs.readFile(path, 'utf8');
+    return await fs.readFile(path, "utf8");
   } catch {
     return defaultValue;
   }
@@ -61,7 +61,7 @@ async function generate(path: string) {
 
   const allFiles = await findFiles(path);
 
-  const grouped = groupBy(allFiles, file => paths.dirname(file));
+  const grouped = groupBy(allFiles, (file) => paths.dirname(file));
 
   const { dirTemplatePath, fileTemplatePath } = getConfigPaths();
   const [dirTemplate, fileTemplate] = await Promise.all([
@@ -73,23 +73,23 @@ async function generate(path: string) {
     Object.entries(grouped).map(async ([dir, files]) => {
       const allTemplates = (
         await Promise.all(
-          files.map(async file => {
+          files.map(async (file) => {
             // ignore if directory
             if ((await fs.stat(file)).isDirectory()) {
               return [];
             }
 
             // read the file
-            const content = await fs.readFile(file, 'utf8');
+            const content = await fs.readFile(file, "utf8");
 
             // Extract all markdown snippets between any @doc start and @md end which start a line
             const results = content.matchAll(
               /(?:^([/*# ])*@doc start((?:[^\S\r\n]+)(?<filename>[\w/.]+))?)(?<template>[\s\S]*?)(?:^([/*# ])*@doc end)/gm
             );
 
-            return Array.from(results).map(result => {
+            return Array.from(results).map((result) => {
               const { filename, template } = result.groups!;
-              const docpath = paths.join(dir, filename || 'readme.md');
+              const docpath = paths.join(dir, filename || "readme.md");
 
               return {
                 filename: file,
@@ -101,7 +101,7 @@ async function generate(path: string) {
         )
       ).flat();
 
-      const byFile = groupBy(allTemplates.flat(), item => item.docpath);
+      const byFile = groupBy(allTemplates.flat(), (item) => item.docpath);
 
       await Promise.all(
         Object.entries(byFile).map(async ([docspath, templates]) => {
@@ -114,7 +114,7 @@ async function generate(path: string) {
             dir_name: paths.basename(dir),
           };
 
-          const files = templates.map(template => {
+          const files = templates.map((template) => {
             const fileVars = {
               path: template.filename,
               name: paths.basename(template.filename),
@@ -146,20 +146,20 @@ async function generate(path: string) {
 program.version(version);
 
 program
-  .command('generate')
+  .command("generate")
   .argument(
-    '[path]',
-    'Recurse this path to find files to extract documentation from. Defaults to the current path',
-    '.'
+    "[path]",
+    "Recurse this path to find files to extract documentation from. Defaults to the current path",
+    "."
   )
-  .action(path => {
-    generate(path).catch(e => {
+  .action((path) => {
+    generate(path).catch((e) => {
       console.error(e);
       process.exit(1);
     });
   });
 
-program.command('init').action(async () => {
+program.command("init").action(async () => {
   const { dirTemplatePath, fileTemplatePath, docpagesDir } = getConfigPaths();
 
   // Ensure the .docpages directory exists
@@ -179,7 +179,7 @@ program.command('init').action(async () => {
     await fs.writeFile(fileTemplatePath, defaultFileTemplate);
   }
 
-  console.log('Initialized .docpages templates');
+  console.log("Initialized .docpages templates");
 });
 
 program.parse();

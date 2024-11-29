@@ -47,8 +47,31 @@ npm install -g docpages
 
 ## Usage
 
-```bash
+```
+Usage: docpages [options] [path]
 
+Recurse through all text files (except anything specified by your top-level .gitignore) and extract documentation snippets.
+
+Text between '@doc start' and '@doc end' is extracted and written to an adjacent file - readme.md by default.
+
+The text is processed with the Moustache template engine. The available variables are:
+
+- {{doc_path}}: the path to the generated file
+- {{doc_name}}: the name of the generated file
+- {{dir_path}}: the path to the directory containing the file
+- {{dir_name}}: the name of the directory containing the file
+- {{name}}: the name of the file being processed
+- {{path}}: the path to the file being processed
+
+
+Arguments:
+  path                     the top directory to scan. (default: ".")
+
+Options:
+  -V, --version            output the version number
+  --init                   generate a .docpages directory with default templates
+  -o, --output <filename>  set the default output file name in each directory
+  -h, --help               display help for command
 ```
 
 <!-- [build-img]: https://github.com/spacerat/docpages/actions/workflows/release.yml/badge.svg

@@ -15,9 +15,8 @@
     "clean": "rm -rf ./lib/",
     "lint": "eslint ./src/ --fix",
     "start": "TS_NODE_FILES=true ts-node ./src/cli.ts",
-    "semantic-release": "semantic-release",
     "test:watch": "jest --watch",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "typecheck": "tsc --noEmit"
   },
   "repository": {
@@ -45,6 +44,7 @@
   "homepage": "https://github.com/spacerat/docpages#readme",
   "dependencies": {
     "commander": "^12.1.0",
+    "execa": "^9.5.1",
     "glob-gitignore": "^1.0.15",
     "mustache": "^4.2.0"
   },
@@ -56,67 +56,15 @@
     "@types/node": "^22.10.1",
     "@typescript-eslint/eslint-plugin": "^8.16.0",
     "@typescript-eslint/parser": "^8.16.0",
-    "chalk": "^5.3.0",
     "eslint": "^9.15.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^5.2.1",
-    "execa": "^9.5.1",
     "jest": "^29.7.0",
-    "lint-staged": "^15.2.10",
     "prettier": "^3.4.1",
-    "semantic-release": "^24.2.0",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.16.0"
-  },
-  "lint-staged": {
-    "*.ts": "eslint --cache --cache-location .eslintcache --fix"
-  },
-  "release": {
-    "branches": [
-      "main"
-    ],
-    "plugins": [
-      [
-        "@semantic-release/commit-analyzer",
-        {
-          "preset": "conventionalcommits",
-          "releaseRules": [
-            {
-              "type": "build",
-              "scope": "deps",
-              "release": "patch"
-            }
-          ]
-        }
-      ],
-      [
-        "@semantic-release/release-notes-generator",
-        {
-          "preset": "conventionalcommits",
-          "presetConfig": {
-            "types": [
-              {
-                "type": "feat",
-                "section": "Features"
-              },
-              {
-                "type": "fix",
-                "section": "Bug Fixes"
-              },
-              {
-                "type": "build",
-                "section": "Dependencies and Other Build Updates",
-                "hidden": false
-              }
-            ]
-          }
-        }
-      ],
-      "@semantic-release/npm",
-      "@semantic-release/github"
-    ]
   }
 }

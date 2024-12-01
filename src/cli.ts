@@ -2,12 +2,8 @@
 
 import { Command } from "commander";
 
-import Mustache from "mustache";
-
 import { createDefaultTemplates } from "./defaultTemplates";
 import { generate } from "./generate";
-
-Mustache.escape = (text) => text;
 
 /*
 @doc start

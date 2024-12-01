@@ -59,10 +59,3 @@ Sqrl.helpers.define("quoteBlock", function (content, blocks, config) {
 });
 ```
 
-
-## [types.d.ts](/src/types.d.ts)
-
-We use glob-gitignore to handle ignoring all files ignored by gitignore.
-
-This file is necessary since it does not have typescript types.
-

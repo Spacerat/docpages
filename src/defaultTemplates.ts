@@ -2,22 +2,25 @@ import paths from "path";
 import { promises as fs } from "fs";
 
 const defaultDirTemplate = `
-{{! This template is applied to each output file }}
-{{#files}}
-{{file}}
-{{/files}}
+{{! /*This template is applied to each output file*/ }}
+{{@each(it.files) => file}}
+{{file.content}}
+
+
+{{/each}}
 `.trim();
 
 const defaultFileTemplate = `
-{{! This template is applied to each input file }}
-{{> content}}
+{{! /*This template is applied to each input file*/ }}
+{{it.content}}
+
 `.trim();
 
 function getDefaultTemplatePaths() {
   const docpagesDir = paths.join(process.cwd(), ".docpages");
 
-  const dirTemplatePath = paths.join(docpagesDir, "doc.mustache");
-  const fileTemplatePath = paths.join(docpagesDir, "source.mustache");
+  const dirTemplatePath = paths.join(docpagesDir, "doc.sqrl");
+  const fileTemplatePath = paths.join(docpagesDir, "source.sqrl");
 
   return { dirTemplatePath, fileTemplatePath, docpagesDir };
 }
@@ -32,7 +35,7 @@ async function readIfExists(path: string, defaultValue: string) {
 }
 
 async function writeIfNotExists(path: string, content: string) {
-  // Write defaultDirTemplate to .docpages/directory.mustache if it doesn't exist
+  // Write defaultDirTemplate to .docpages/directory.sqrl if it doesn't exist
   try {
     await fs.writeFile(path, content, { flag: "wx" });
     console.log(`Wrote ${path}`);

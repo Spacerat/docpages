@@ -1,0 +1,17 @@
+{{! /*
+@doc start
+
+The doc.sqrl file in the .docpages directory defines a template which is applied to each output file.
+
+Each output file consists of the content of the `@doc` blocks in one or more files.
+
+@doc end
+*/}}
+
+# `{{it.dir_path}}` directory
+
+{{@each(it.files) => file}}
+{{file.content}}
+
+
+{{/each}}

@@ -9,11 +9,10 @@ import { generate } from "./generate";
 
 Mustache.escape = (text) => text;
 
-/* @doc start
+/*
+@doc start
 
-This is the main source file.
-
-It implements a full CLI inteface using Commander and Mustache templates.
+This is the entrypoint, defining the CLI interface and available options.
 
 @doc end */
 
@@ -31,7 +30,7 @@ program
     
 Text between '@doc start' and '@doc end' is extracted and written to an adjacent file - readme.md by default.
 
-The text is processed with the Moustache template engine. The available variables are:
+The text is processed with the Squirrely template engine. The available variables are:
 
 - {{doc_path}}: the path to the generated file
 - {{doc_name}}: the name of the generated file

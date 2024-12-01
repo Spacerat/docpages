@@ -1,9 +1,10 @@
-import Mustache from "mustache";
+import Sqrl from "./sqrl";
 import { promises as fs } from "fs";
 import paths from "path";
 import { readDefaultTemplates } from "./defaultTemplates";
 import { groupBy } from "./utils";
 import { glob } from "glob-gitignore";
+import dedent from "dedent";
 
 type Opts = { defaultName?: string };
 
@@ -18,7 +19,7 @@ export async function generate(
   const { dirTemplate, fileTemplate } = await readDefaultTemplates();
 
   await Promise.all(
-    Object.entries(grouped).map(async ([dir, files]) => {
+    Object.entries(grouped).map(async ([outputDirectoryPath, files]) => {
       const allTemplates = (
         await Promise.all(
           files.map(async (file) => {
@@ -40,11 +41,15 @@ export async function generate(
                 .filter((groups) => groups != null)
                 .map((groups) => {
                   const { filename, template } = groups;
-                  const docpath = paths.join(dir, filename || defaultName);
+                  const docpath = paths.join(
+                    outputDirectoryPath,
+                    filename || defaultName
+                  );
 
                   return {
                     filepath: file,
-                    template: template.trim(),
+                    template: template,
+                    filesource: content,
                     docpath,
                   };
                 })
@@ -62,39 +67,64 @@ export async function generate(
       const byFile = groupBy(allTemplates.flat(), (item) => item.docpath);
 
       await Promise.all(
-        Object.entries(byFile).map(async ([docspath, templates]) => {
-          console.log(`Writing ${docspath}`);
+        Object.entries(byFile).map(async ([outputPath, templates]) => {
+          console.log(`Writing ${outputPath}`);
+
+          /* @doc start templates.md
+          These variables are defined for each output file, and are also available in doc.sqrl
+
+            - {{`{{it.doc_path}}`}}: the path to the generated file e.g. "{{it.doc_path}}"
+            - {{`{{it.doc_name}}`}}: the name of the generated file e.g. "{{it.doc_name}}"
+            - {{`{{it.dir_path}}`}}: the path to the directory containing the file e.g. "{{it.dir_path}}"
+            - {{`{{it.dir_name}}`}}: the name of the directory containing the file e.g. "{{it.dir_name}}"
+          @doc end */
 
           const directoryVars = {
-            doc_path: docspath,
-            dir_path: dir,
-            doc_name: paths.basename(docspath),
-            dir_name: paths.basename(dir),
+            doc_path: outputPath,
+            doc_name: paths.basename(outputPath),
+            dir_path: outputDirectoryPath,
+            dir_name: paths.basename(outputDirectoryPath),
           };
 
-          const files = templates.map((template) => {
+          const bySourceFile = groupBy(templates, (item) => item.filepath);
+
+          const files = Object.values(bySourceFile).map((templates) => {
+            /* @doc start templates.md
+            These variables are only available within @doc blocks in source files
+
+              - {{`{{it.path}}`}}: the path to the file being processed e.g. "{{it.path}}"
+              - {{`{{it.name}}`}}: the name of the file being processed e.g. "{{it.name}}"
+            @doc end */
             const fileVars = {
-              path: template.filepath,
-              name: paths.basename(template.filepath),
+              path: templates[0].filepath,
+              name: paths.basename(templates[0].filepath),
             };
 
-            const fileRendered = Mustache.render(
-              fileTemplate,
-              {
-                ...directoryVars,
-                ...fileVars,
-              },
-              { content: template.template }
+            const fileContext = {
+              ...directoryVars,
+              ...fileVars,
+            };
+
+            const renderedBlocks = templates.map((template) =>
+              Sqrl.render(dedent(template.template), fileContext, {
+                source: template.filesource,
+              })
             );
-            return { ...fileVars, file: fileRendered };
+
+            return {
+              content: Sqrl.render(fileTemplate, {
+                ...fileContext,
+                content: renderedBlocks.join("\n\n"),
+              }),
+            };
           });
 
-          const result = Mustache.render(dirTemplate, {
+          const result = Sqrl.render(dirTemplate, {
             ...directoryVars,
             files,
           });
 
-          await fs.writeFile(docspath, result);
+          await fs.writeFile(outputPath, result);
         })
       );
     })
@@ -104,7 +134,7 @@ export async function generate(
 export async function findFiles(path: string) {
   const gitignore = await fs.readFile(".gitignore", "utf8");
 
-  const rules = gitignore.split("\n");
+  const rules = [...gitignore.split("\n"), ".git"];
 
-  return await glob(paths.join(path, "**"), { ignore: rules });
+  return await glob(paths.join(path, "**"), { ignore: rules, dot: true });
 }

@@ -1,0 +1,13 @@
+{{! /*
+@doc start
+
+The source.sqrl file in the .docpages directory defines a template which is applied to the content of each source file.
+
+Each file may define multiple blocks. The blocks are rendered and concatenated, then rendered into this template with `{{`{{it.content}}`}}`.
+
+@doc end
+*/}}
+
+## [{{it.name}}](/{{it.path}})
+
+{{it.content}}
